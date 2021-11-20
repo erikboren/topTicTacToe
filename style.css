@@ -1,0 +1,16 @@
+.screenField{
+    width: 200px;
+    height: 200px;
+    border: 1px solid black;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.screenBoard{
+    margin:auto;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-columns: repeat(3,1fr);
+    height: 620px;
+    width: 620px;
+}

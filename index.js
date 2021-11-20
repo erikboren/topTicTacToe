@@ -1,4 +1,6 @@
 /*jshint esversion: 6 */
+const screenBoard = document.querySelector(".screenBoard");
+
 
 const playerFactory = (marker,isBot,playerID) =>{
     
@@ -6,7 +8,7 @@ const playerFactory = (marker,isBot,playerID) =>{
 
     this.playerID = playerID;
 
-    var isWinner = false;
+    this.isWinner = false;
 
     const play = function(xCord,yCord){
        board.placeMarker(xCord,yCord,this);
@@ -16,17 +18,33 @@ const playerFactory = (marker,isBot,playerID) =>{
 };
 
 const fieldFactory = (xCord,yCord) =>{
-    // this.status = null;
+    this.status = null;
     
    const cord = [xCord,yCord];
 
     const playField = function(player){
-           this.status = player.marker;
+        if (status != null){
+            this.status = player.marker;
+            return true;
+        } else {
+            return false;
+        }
     };
 
     return {status, cord, playField};
 
 };
+
+const screenFieldFactory = (xCord,yCord) =>{
+    var element = document.createElement('div');
+    element.classList.add('screenField');
+    element.onclick = function(){
+        players[activePlayer].play(xCord,yCord);
+        element.textContent = players[0].marker;
+    };
+    return  {element};
+};
+
 
 const players = [];
 players[0] = playerFactory('x',false,0);
@@ -34,17 +52,21 @@ players[1] = playerFactory('o',false,1);
 
 const board = (function(){
     let fieldArray =  Array.from(Array(3), () => new Array(3));
-
+    let markerArray = Array.from(Array(3), () => new Array(3));
+    
+    
     for(i=0;i<3;i++){
         for(k=0; k<3; k++){
             var field = fieldFactory(i,k);
             fieldArray[i][k] = field;
+            markerArray[i][k] = field.status;
         }
     }
 
     const placeMarker = function(xCord,yCord,player){
         fieldArray[xCord][yCord].playField(player);
-        return field;
+        checkWin(player);
+        return;
     };
 
     const checkWin = function(player){
@@ -65,32 +87,18 @@ const board = (function(){
                 fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].status;
             }
             if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == player.marker){
-                console.log(fields);
                 player.isWinner = true;
                 return [true,player];
                 
-            }
-            return [false,null];
+            } else{
+                } 
         }
-
+        return [false,null];
         
 
     };
 
-
-        let markerArray;
-
     const printMArray = () => {
-        markerArray = Array.from(Array(3), () => new Array(3));
-
-        for(i=0; i<3;i++){
-            for(k=0; k<3;k++){
-                if(fieldArray[i][k].status != ''){
-                    markerArray[i][k] = fieldArray[i][k].status;
-                }
-                
-            }
-        }
         console.table(markerArray);
     };
 
@@ -100,29 +108,25 @@ const board = (function(){
 
 })();
 
-// const screenController = (function(){
-//     let markerArray = Array.from(Array(3), () => new Array(3));
+const screenController = (function(){
+    
+    const display = function(){
+        screenBoard.innerHTML = '';
+        for(i=0;i<3;i++){
+        for(k=0; k<3; k++){
+           screenBoard.appendChild(screenFieldFactory(i,k).element); 
+            }
+        }
+    };
 
-//     for(i=0; i<3;i++){
-//         for(k=0; k<3;k++){
-//             markerArray[i][k] = board.fieldArray[i][k].status.marker;
-//         }
-//     }
+    
 
-//     const printArray = function(){
-//         console.table(markerArray);
-//     };
-
-//     return {markerArray};
-// });
+    return {display};
+})();
 
 
-players[0].play(0,0);
-players[0].play(1,1);
-players[0].play(2,2);
+var activePlayer = 0;
 
 board.printMArray();
 
 board.printArray();
-
-console.log(board.checkWin(players[0]));
