@@ -130,7 +130,8 @@ const screenController = (function(){
         gameInfo.textContent = "Player " + displayPlayer +"'s turn";
     };
     const displayWinner = function(playerID){
-        gameInfo.textContent = 'Player ' + playerID + ' wins!';
+        const winner = playerID +1;
+        gameInfo.textContent = 'Player ' + winner + ' wins!';
     };
 
 
