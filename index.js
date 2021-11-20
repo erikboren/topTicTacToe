@@ -1,6 +1,6 @@
 /*jshint esversion: 6 */
 const screenBoard = document.querySelector(".screenBoard");
-
+const gameInfo = document.querySelector(".gameInfo");
 
 const playerFactory = (marker,isBot,playerID) =>{
     
@@ -39,8 +39,9 @@ const screenFieldFactory = (xCord,yCord) =>{
     var element = document.createElement('div');
     element.classList.add('screenField');
     element.onclick = function(){
+        element.textContent = players[activePlayer].marker;
         players[activePlayer].play(xCord,yCord);
-        element.textContent = players[0].marker;
+        
     };
     return  {element};
 };
@@ -65,7 +66,9 @@ const board = (function(){
 
     const placeMarker = function(xCord,yCord,player){
         fieldArray[xCord][yCord].playField(player);
-        checkWin(player);
+        activePlayer = changePlayer(player);
+        var win = checkWin(player);
+        win[0] == true ? screenController.displayWinner(player.playerID): screenController.displayPlayerTurn() ;
         return;
     };
 
@@ -98,6 +101,9 @@ const board = (function(){
 
     };
 
+    const changePlayer = function(player){
+        return player.playerID == 0 ? 1 : 0;
+    };
     const printMArray = () => {
         console.table(markerArray);
     };
@@ -119,13 +125,28 @@ const screenController = (function(){
         }
     };
 
-    
+    const displayPlayerTurn = function(){
+        const displayPlayer = activePlayer+1;
+        gameInfo.textContent = "Player " + displayPlayer +"'s turn";
+    };
+    const displayWinner = function(playerID){
+        gameInfo.textContent = 'Player ' + playerID + ' wins!';
+    };
 
-    return {display};
+
+    const update = function(){
+        display();
+        displayPlayerTurn();
+    };
+
+    return {update, displayPlayerTurn, displayWinner};
 })();
 
 
+
 var activePlayer = 0;
+
+screenController.update();
 
 board.printMArray();
 
