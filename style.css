@@ -1,9 +1,29 @@
+body{
+    background-color: #FEF5ED;
+    font-family: sans-serif;
+    color: #555555;
+}
+
 .screenField{
     width: 150px;
     height: 150px;
-    border: 1px solid black;
-    border-radius: 5px;
     text-align: center;
+}
+
+.evenField{
+    background-color: #D3E4CD;
+}
+
+.oddField{
+    background-color: #ADC2A9;
+}
+
+.xField{
+
+}
+
+.ofield{
+
 }
 
 .screenBoard{
@@ -11,6 +31,8 @@
     display: grid;
     grid-template-columns: repeat(3,1fr);
     grid-template-columns: repeat(3,1fr);
-    height: 460px;
-    width: 460px;
+    justify-items: center;
+    align-items: center;
+    height:fit-content;
+    width: fit-content;
 }
