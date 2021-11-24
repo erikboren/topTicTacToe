@@ -4,10 +4,26 @@ body{
     color: #555555;
 }
 
+h1{
+    text-align: center;
+}
+
+
+.container{
+    display: flex;
+    width: 80%;
+    margin: auto;
+    justify-content: space-evenly;
+}
+
 .screenField{
     width: 150px;
     height: 150px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: large;
+    cursor:pointer;
 }
 
 .evenField{
@@ -18,16 +34,15 @@ body{
     background-color: #ADC2A9;
 }
 
-.xField{
-
+.evenField:hover{
+    background-color: #7d9275;
 }
 
-.ofield{
-
+.oddField:hover{
+    background-color: #adc2a9b2;
 }
 
 .screenBoard{
-    margin:auto;
     display: grid;
     grid-template-columns: repeat(3,1fr);
     grid-template-columns: repeat(3,1fr);
@@ -36,3 +51,29 @@ body{
     height:fit-content;
     width: fit-content;
 }
+
+.controlPanel{
+    width:450px;
+    display: flex;
+    justify-content: center;
+}
+
+.statistics{
+    width: 100px;
+    display: flex;
+    justify-content: center;
+}
+
+.gameInfo{
+    width: 470px;
+    height: 100px;
+    border-radius: 10px;
+    margin: auto;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border: 1px solid black;
+}
+

@@ -1,20 +1,23 @@
 /*jshint esversion: 6 */
 const screenBoard = document.querySelector(".screenBoard");
 const gameInfo = document.querySelector(".gameInfo");
+const gameInfoText = document.getElementById("gameInfoText");
 
-const playerFactory = (marker,isBot,playerID) =>{
+const playerFactory = (marker,isBot,playerID,name) =>{
     
     this.marker = marker;
 
     this.playerID = playerID;
 
     this.isWinner = false;
+    
+    this.name = name;
 
     const play = function(xCord,yCord){
        board.placeMarker(xCord,yCord,this);
     };
 
-    return{marker, isWinner, play, playerID};
+    return{marker, isWinner, play, playerID, name};
 };
 
 const fieldFactory = (xCord,yCord) =>{
@@ -43,15 +46,10 @@ const screenFieldFactory = (xCord,yCord) =>{
     }
     
     element.onclick = function(){
-        players[activePlayer].play(xCord,yCord);
+        players[gameController.activePlayer].play(xCord,yCord);
     };
     return  {element};
 };
-
-
-const players = [];
-players[0] = playerFactory('x',false,0);
-players[1] = playerFactory('o',false,1);
 
 const board = (function(){
     let fieldArray =  Array.from(Array(3), () => new Array(3));
@@ -67,12 +65,9 @@ const board = (function(){
     const placeMarker = function(xCord,yCord,player){
         if(fieldArray[xCord][yCord].status == 'null'){
             fieldArray[xCord][yCord].playField(player);
-            activePlayer = changePlayer(player);
-            var win = checkWin(player);
-            win[0] == true ? screenController.displayWinner(player.playerID): screenController.displayPlayerTurn();
+            gameController.postRound(player);
             screenController.updateField(xCord,yCord);
         } else{
-            console.log(fieldArray[xCord][yCord].status);
         }
         return;
     };
@@ -106,11 +101,6 @@ const board = (function(){
 
     };
 
-    const changePlayer = function(player){
-        return player.playerID == 0 ? 1 : 0;
-    };
-
-
     const printArray = ()=> console.table(fieldArray);
 
     return {printArray, fieldArray, placeMarker, checkWin};
@@ -129,19 +119,18 @@ const screenController = (function(){
         }
     };
 
-    const displayPlayerTurn = function(){
-        const displayPlayer = activePlayer+1;
-        gameInfo.textContent = "Player " + displayPlayer +"'s turn";
+    const displayPlayerTurn = function(name){
+        
+        gameInfoText.textContent = name +"'s turn" ;
     };
-    const displayWinner = function(playerID){
-        const winner = playerID +1;
-        gameInfo.textContent = 'Player ' + winner + ' wins!';
+    const displayWinner = function(name){
+        gameInfoText.textContent = name+ ' wins!';
     };
 
 
-    const update = function(){
+    const update = function(name){
         display();
-        displayPlayerTurn();
+        displayPlayerTurn(name);
     };
 
     const updateField = function(xCord,yCord){
@@ -157,8 +146,59 @@ const screenController = (function(){
     return {update, displayPlayerTurn, displayWinner, updateField};
 })();
 
+const gameController = (function(){
+    this.players = [];
+    const createPlayers = function(names){  
+        players[0] = playerFactory('x',false,0,names[0]);
+        players[1] = playerFactory('o',false,1,names[1]);
+    };
+
+    const checkWin = function(player){
+        const possibleWins = [
+            [[0,0],[1,1],[2,2]],
+            [[2,0],[1,1],[0,2]],
+            [[0,0],[1,0],[2,0]],
+            [[0,1],[1,1],[2,1]],
+            [[0,2],[1,2],[2,2]],
+            [[0,0],[0,1],[0,2]],
+            [[1,0],[1,1],[1,2]],
+            [[2,0],[2,1],[2,2]]
+        ];
+
+        for(i=0; i<8;i++){
+            var fields = [];
+            for(k=0; k<3;k++){
+                fields[k] = board.fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].status;
+            }
+            if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == player.marker){
+                player.isWinner = true;
+                return [true,player];
+                
+            } else{
+                } 
+        }
+        return [false,null];
+        
+
+    };
+    var activePlayer = 0; 
+    const postRound = function(){
+        if(checkWin(players[activePlayer])[0] == true){
+            screenController.displayWinner(players[activePlayer].name);
+        } else{
+
+            activePlayer = activePlayer == 0 ? 1 : 0;
+            this.activePlayer = activePlayer;
+            screenController.displayPlayerTurn(players[activePlayer].name);
+        }
+    };
+
+    const setupGame = function(mode,names){
+        createPlayers(names);
+        screenController.update(players[activePlayer].name);
+    };
+    return {postRound, checkWin, players, setupGame, activePlayer};
+})();
 
 
-var activePlayer = 0;
-
-screenController.update();
+gameController.setupGame('tjaa',['Erik','Lovisa']);
