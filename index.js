@@ -14,7 +14,7 @@ const playerFactory = (marker,isBot,playerID,name) =>{
     this.name = name;
 
     const play = function(xCord,yCord){
-       board.placeMarker(xCord,yCord,this);
+        board.placeMarker(xCord,yCord,this);
     };
 
     return{marker, isWinner, play, playerID, name};
@@ -68,42 +68,15 @@ const board = (function(){
             gameController.postRound(player);
             screenController.updateField(xCord,yCord);
         } else{
+            console.log('bajs deluze');
         }
         return;
     };
 
-    const checkWin = function(player){
-        const possibleWins = [
-            [[0,0],[1,1],[2,2]],
-            [[2,0],[1,1],[0,2]],
-            [[0,0],[1,0],[2,0]],
-            [[0,1],[1,1],[2,1]],
-            [[0,2],[1,2],[2,2]],
-            [[0,0],[0,1],[0,2]],
-            [[1,0],[1,1],[1,2]],
-            [[2,0],[2,1],[2,2]]
-        ];
-
-        for(i=0; i<8;i++){
-            var fields = [];
-            for(k=0; k<3;k++){
-                fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].status;
-            }
-            if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == player.marker){
-                player.isWinner = true;
-                return [true,player];
-                
-            } else{
-                } 
-        }
-        return [false,null];
-        
-
-    };
 
     const printArray = ()=> console.table(fieldArray);
 
-    return {printArray, fieldArray, placeMarker, checkWin};
+    return {printArray, fieldArray, placeMarker};
 
 })();
 
@@ -153,7 +126,7 @@ const gameController = (function(){
         players[1] = playerFactory('o',false,1,names[1]);
     };
 
-    const checkWin = function(player){
+    const checkWin = function(marker,fieldArray){
         const possibleWins = [
             [[0,0],[1,1],[2,2]],
             [[2,0],[1,1],[0,2]],
@@ -168,11 +141,10 @@ const gameController = (function(){
         for(i=0; i<8;i++){
             var fields = [];
             for(k=0; k<3;k++){
-                fields[k] = board.fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].status;
+                fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].status;
             }
-            if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == player.marker){
-                player.isWinner = true;
-                return [true,player];
+            if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == marker){
+                return [true,marker];
                 
             } else{
                 } 
@@ -182,11 +154,13 @@ const gameController = (function(){
 
     };
     var activePlayer = 0; 
+    
     const postRound = function(){
-        if(checkWin(players[activePlayer])[0] == true){
+        if(checkWin(players[activePlayer].marker,board.fieldArray)[0] == true){
             screenController.displayWinner(players[activePlayer].name);
-        } else{
-
+        } 
+        else
+        {
             activePlayer = activePlayer == 0 ? 1 : 0;
             this.activePlayer = activePlayer;
             screenController.displayPlayerTurn(players[activePlayer].name);
@@ -197,8 +171,33 @@ const gameController = (function(){
         createPlayers(names);
         screenController.update(players[activePlayer].name);
     };
-    return {postRound, checkWin, players, setupGame, activePlayer};
+
+    const bot = (function(marker){
+        const evaluate = function(marker){
+            const freeFields = function(fieldArray){
+                const possibleActions = [];
+                fieldArray.forEach((row) => row.forEach((element)=> element.status == 'null' ? possibleActions.push(element.cord) : null));
+                return possibleActions;
+            };
+            var possibleActions = freeFields(board.fieldArray);
+
+            possibleActions.forEach((freeField) =>{
+                const boardInstance = structuredClone(board.fieldArray);
+                boardInstance[freeField[0]][freeField[1]].playField(marker);
+                if(checkWin(marker,boardInstance)[0] == true){
+                    freeField[2] = 10;
+                }
+                else freeField[2] = 0;
+
+            });
+            console.table(possibleActions);
+        };
+        return {evaluate};
+        
+    })();
+
+    return {postRound, checkWin, players, setupGame, activePlayer, bot};
 })();
 
 
-gameController.setupGame('tjaa',['Erik','Lovisa']);
+gameController.setupGame('',['Player1','Player2']);
