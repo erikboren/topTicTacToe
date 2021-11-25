@@ -221,14 +221,7 @@ const deepCopyFunction = (inObject) => {
   };
 
 
-const testFunction = function(){
-    board.placeMarker(0,0,gameController.players[0]);
-    board.placeMarker(1,1,gameController.players[0]);
-};
-
 gameController.setupGame('',['Player1','Player2']);
 
 
-testFunction();
 
-gameController.bot.evaluate('x');
