@@ -24,8 +24,8 @@ const fieldFactory = (xCord,yCord) =>{
     this.status = null;
    const cord = [xCord,yCord];
 
-    const playField = function(player){
-        this.status = player.marker;
+    const playField = function(marker){
+        this.status = marker;
     };
 
     return {status, cord, playField};
@@ -64,7 +64,7 @@ const board = (function(){
 
     const placeMarker = function(xCord,yCord,player){
         if(fieldArray[xCord][yCord].status == 'null'){
-            fieldArray[xCord][yCord].playField(player);
+            fieldArray[xCord][yCord].playField(player.marker);
             gameController.postRound(player);
             screenController.updateField(xCord,yCord);
         } else{
@@ -175,15 +175,16 @@ const gameController = (function(){
     const bot = (function(marker){
         const evaluate = function(marker){
             const freeFields = function(fieldArray){
-                const possibleActions = [];
-                fieldArray.forEach((row) => row.forEach((element)=> element.status == 'null' ? possibleActions.push(element.cord) : null));
-                return possibleActions;
+                const freeFields = [];
+                fieldArray.forEach((row) => row.forEach((element)=> element.status == 'null' ? freeFields.push(element.cord) : null));
+                return freeFields;
             };
             var possibleActions = freeFields(board.fieldArray);
 
             possibleActions.forEach((freeField) =>{
-                const boardInstance = structuredClone(board.fieldArray);
+                const boardInstance = deepCopyFunction(board.fieldArray);
                 boardInstance[freeField[0]][freeField[1]].playField(marker);
+                console.table(boardInstance);
                 if(checkWin(marker,boardInstance)[0] == true){
                     freeField[2] = 10;
                 }
@@ -199,5 +200,35 @@ const gameController = (function(){
     return {postRound, checkWin, players, setupGame, activePlayer, bot};
 })();
 
+const deepCopyFunction = (inObject) => {
+    let outObject, value, key;
+  
+    if (typeof inObject !== "object" || inObject === null) {
+      return inObject; // Return the value if inObject is not an object
+    }
+  
+    // Create an array or object to hold the values
+    outObject = Array.isArray(inObject) ? [] : {};
+  
+    for (key in inObject) {
+      value = inObject[key];
+  
+      // Recursively (deep) copy for nested objects, including arrays
+      outObject[key] = deepCopyFunction(value);
+    }
+  
+    return outObject;
+  };
+
+
+const testFunction = function(){
+    board.placeMarker(0,0,gameController.players[0]);
+    board.placeMarker(1,1,gameController.players[0]);
+};
 
 gameController.setupGame('',['Player1','Player2']);
+
+
+testFunction();
+
+gameController.bot.evaluate('x');
