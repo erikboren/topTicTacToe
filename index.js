@@ -182,7 +182,7 @@ const gameController = (function(){
             var possibleActions = freeFields(board.fieldArray);
 
             possibleActions.forEach((freeField) =>{
-                const boardInstance = deepCopyFunction(board.fieldArray);
+                const boardInstance = deepCopyFunction(fieldArray);
                 boardInstance[freeField[0]][freeField[1]].playField(marker);
                 console.table(boardInstance);
                 if(checkWin(marker,boardInstance)[0] == true){
