@@ -1,7 +1,8 @@
 /*jshint esversion: 6 */
+/*jshint -W030 */
 const screenBoard = document.querySelector(".screenBoard");
 const gameInfo = document.querySelector(".gameInfo");
-const gameInfoText = document.getElementById("gameInfoText");
+const gameInfoText = document.querySelectorAll(".gameInfoText");
 
 const playerFactory = (marker,isBot,playerID,name) =>{
     
@@ -46,8 +47,11 @@ const screenFieldFactory = (xCord,yCord) =>{
     }
     
     element.onclick = function(){
-        players[gameController.activePlayer].play(xCord,yCord);
+        if(gameController.gameOver == false){
+            players[gameController.activePlayer].play(xCord,yCord);
+        }
     };
+
     return  {element};
 };
 
@@ -81,6 +85,39 @@ const board = (function(){
 })();
 
 const screenController = (function(){
+    //gameOver Modal
+    const statsButton = document.querySelector(".statsButton");
+    const gameOverModal = document.querySelector(".gameOverModal");
+    const gameOverClose = document.getElementById("gameOverClose");
+
+    gameOverClose.onclick = function(){
+        gameOverModal.style.display = "none";
+    };
+    
+    statsButton.onclick = function(){
+        gameOverModal.style.display = "block";
+    };
+
+    // settings Modal
+    const settingsModal = document.querySelector(".settingsModal");
+    const settingsButton = document.querySelector(".settingsButton");
+    const settingsClose = document.getElementById("settingsClose");
+    
+    settingsClose.onclick = function() {
+        settingsModal.style.display = "none";
+      };
+
+    const displaySettingsModal = function(){
+        settingsModal.style.display= "block";
+    };
+
+    settingsButton.onclick = function(){
+        displaySettingsModal();
+    };
+   
+
+
+
     var screenFieldArray = Array.from(Array(3), () => new Array(3));
     const display = function(){
         screenBoard.innerHTML = '';
@@ -93,11 +130,10 @@ const screenController = (function(){
     };
 
     const displayPlayerTurn = function(name){
-        
-        gameInfoText.textContent = name +"'s turn" ;
+        gameInfoText.forEach(element => element.textContent =name +"'s turn" );
     };
     const displayWinner = function(name){
-        gameInfoText.textContent = name+ ' wins!';
+        gameInfoText.forEach(element => element.textContent =name +"wins!" );
     };
 
 
@@ -115,6 +151,8 @@ const screenController = (function(){
                 }
             }
     };
+
+    
 
     return {update, displayPlayerTurn, displayWinner, updateField};
 })();
@@ -158,6 +196,7 @@ const gameController = (function(){
     const postRound = function(){
         if(checkWin(players[activePlayer].marker,board.fieldArray)[0] == true){
             screenController.displayWinner(players[activePlayer].name);
+            this.gameOver = true;
         } 
         else
         {
@@ -166,14 +205,20 @@ const gameController = (function(){
             screenController.displayPlayerTurn(players[activePlayer].name);
         }
     };
+        this,gameOver = false;
+    const startNewGame = function(){
+        this.gameOver = false;
+    };
 
     const setupGame = function(mode,names){
         createPlayers(names);
         screenController.update(players[activePlayer].name);
+        startNewGame();
     };
 
+   
     const bot = (function(marker){
-        const evaluate = function(marker){
+        const evaluate = function(){
             const freeFields = function(fieldArray){
                 const freeFields = [];
                 fieldArray.forEach((row) => row.forEach((element)=> element.status == 'null' ? freeFields.push(element.cord) : null));
@@ -184,7 +229,6 @@ const gameController = (function(){
             possibleActions.forEach((freeField) =>{
                 const boardInstance = deepCopyFunction(fieldArray);
                 boardInstance[freeField[0]][freeField[1]].playField(marker);
-                console.table(boardInstance);
                 if(checkWin(marker,boardInstance)[0] == true){
                     freeField[2] = 10;
                 }
@@ -197,7 +241,7 @@ const gameController = (function(){
         
     })();
 
-    return {postRound, checkWin, players, setupGame, activePlayer, bot};
+    return {postRound, checkWin, players, setupGame, activePlayer, bot, gameOver};
 })();
 
 const deepCopyFunction = (inObject) => {
