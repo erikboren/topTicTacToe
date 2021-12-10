@@ -14,11 +14,13 @@ const playerFactory = (marker,isBot,playerID,name) =>{
     
     this.name = name;
 
+    this.wins = 0;
+
     const play = function(xCord,yCord){
         board.placeMarker(xCord,yCord,this);
     };
 
-    return{marker, isWinner, play, playerID, name};
+    return{marker, isWinner, play, playerID, name, wins};
 };
 
 const fieldFactory = (xCord,yCord) =>{
@@ -29,7 +31,11 @@ const fieldFactory = (xCord,yCord) =>{
         this.status = marker;
     };
 
-    return {status, cord, playField};
+    const resetField = function(){
+        this.status = null;
+    };
+
+    return {status, cord, playField, resetField};
 
 };
 
@@ -78,9 +84,15 @@ const board = (function(){
     };
 
 
+    const resetBoard = function(){
+        fieldArray.forEach(fieldVector =>{
+            fieldVector.forEach(field => field.resetField);
+        });
+    };
+
     const printArray = ()=> console.table(fieldArray);
 
-    return {printArray, fieldArray, placeMarker};
+    return {printArray, fieldArray, placeMarker, resetBoard};
 
 })();
 
@@ -90,18 +102,26 @@ const screenController = (function(){
     const gameOverModal = document.querySelector(".gameOverModal");
     const gameOverClose = document.getElementById("gameOverClose");
 
+    const displayGameOverModal = function(){
+        viewStatistics();
+        gameOverModal.style.display = "block";
+    };
+
     gameOverClose.onclick = function(){
         gameOverModal.style.display = "none";
     };
     
     statsButton.onclick = function(){
-        gameOverModal.style.display = "block";
+        displayGameOverModal();
     };
+
 
     // settings Modal
     const settingsModal = document.querySelector(".settingsModal");
     const settingsButton = document.querySelector(".settingsButton");
     const settingsClose = document.getElementById("settingsClose");
+    const startGameBtn = document.querySelector(".startGameBtn");
+    const nameField = document.querySelectorAll(".nameField");
     
     settingsClose.onclick = function() {
         settingsModal.style.display = "none";
@@ -115,7 +135,24 @@ const screenController = (function(){
         displaySettingsModal();
     };
    
+    startGameBtn.onclick = function(){
+        settingsModal.style.display = "none";
+        var names = [] ;
+        nameField.forEach((element,index) => names[index]=element.value);
+        gameController.setupGame('',names);
+    };
 
+    const winsCells = document.querySelectorAll(".wins");
+    const nameCells = document.querySelectorAll(".playerName");
+    const viewStatistics = function(){
+        winsCells.forEach((element,index) =>{
+            element.textContent=gameController.players[index].wins;
+        });
+        nameCells.forEach((element,index) =>{
+            element.textContent=gameController.players[index].name;
+        });
+
+    };
 
 
     var screenFieldArray = Array.from(Array(3), () => new Array(3));
@@ -133,13 +170,14 @@ const screenController = (function(){
         gameInfoText.forEach(element => element.textContent =name +"'s turn" );
     };
     const displayWinner = function(name){
-        gameInfoText.forEach(element => element.textContent =name +"wins!" );
+        gameInfoText.forEach(element => element.textContent =name +" wins!" );
     };
 
 
     const update = function(name){
         display();
         displayPlayerTurn(name);
+       
     };
 
     const updateField = function(xCord,yCord){
@@ -154,7 +192,7 @@ const screenController = (function(){
 
     
 
-    return {update, displayPlayerTurn, displayWinner, updateField};
+    return {update, displayPlayerTurn, displayWinner, updateField, displayGameOverModal, displaySettingsModal};
 })();
 
 const gameController = (function(){
@@ -192,11 +230,13 @@ const gameController = (function(){
 
     };
     var activePlayer = 0; 
-    
+    this.gameOver = false;
     const postRound = function(){
         if(checkWin(players[activePlayer].marker,board.fieldArray)[0] == true){
             screenController.displayWinner(players[activePlayer].name);
+            players[activePlayer].wins ++;
             this.gameOver = true;
+            screenController.displayGameOverModal();
         } 
         else
         {
@@ -205,15 +245,18 @@ const gameController = (function(){
             screenController.displayPlayerTurn(players[activePlayer].name);
         }
     };
-        this,gameOver = false;
     const startNewGame = function(){
         this.gameOver = false;
+        board.resetBoard();
+        screenController.update(players[activePlayer].name);
+
     };
 
     const setupGame = function(mode,names){
         createPlayers(names);
-        screenController.update(players[activePlayer].name);
         startNewGame();
+        activePlayer =0;
+        screenController.update(players[activePlayer].name);
     };
 
    
@@ -263,9 +306,12 @@ const deepCopyFunction = (inObject) => {
   
     return outObject;
   };
+  
+  
+screenController.update();
 
 
-gameController.setupGame('',['Player1','Player2']);
+
 
 
 

@@ -91,12 +91,16 @@ h2{
     top:0;
 }
 
+.settingsModal{
+    display: block;
+}
+
 .modal-content{
     background-color: #EEEDE7;
     margin: 7% auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 60%;
+    width: 40%;
     border-radius: 10px;
 }
 
