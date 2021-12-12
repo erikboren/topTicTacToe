@@ -22,9 +22,9 @@ h2{
     width: 150px;
     height: 150px;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    font-size: large;
+    font-size: 150px ;
     cursor:pointer;
 }
 
