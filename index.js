@@ -24,18 +24,23 @@ const playerFactory = (marker,isBot,playerID,name) =>{
 };
 
 const fieldFactory = (xCord,yCord) =>{
-    this.status = null;
+    var state = 'empty';
+    this.state = state;
    const cord = [xCord,yCord];
 
     const playField = function(marker){
-        this.status = marker;
+        state = marker;
+        this.state = state;
     };
 
     const resetField = function(){
-        this.status = null;
+        state = 'empty';
+        this.state = state;
     };
 
-    return {status, cord, playField, resetField};
+
+
+    return {state, cord, playField, resetField};
 
 };
 
@@ -73,12 +78,11 @@ const board = (function(){
     }
 
     const placeMarker = function(xCord,yCord,player){
-        if(fieldArray[xCord][yCord].status == 'null'){
+        if(fieldArray[xCord][yCord].state == 'empty'){
             fieldArray[xCord][yCord].playField(player.marker);
             gameController.postRound(player);
             screenController.updateField(xCord,yCord);
         } else{
-            console.log('bajs deluze');
         }
         return;
     };
@@ -86,13 +90,18 @@ const board = (function(){
 
     const resetBoard = function(){
         fieldArray.forEach(fieldVector =>{
-            fieldVector.forEach(field => field.resetField);
+            fieldVector.forEach(field => field.resetField());
         });
     };
 
     const printArray = ()=> console.table(fieldArray);
 
-    return {printArray, fieldArray, placeMarker, resetBoard};
+    const allFieldsFilled = function(){
+        const freeFields = fieldArray.some(fieldVector => fieldVector.some(field => field.state == 'empty') == true );
+        return !freeFields;
+    };
+
+    return {printArray, fieldArray, placeMarker, resetBoard, allFieldsFilled};
 
 })();
 
@@ -101,6 +110,7 @@ const screenController = (function(){
     const statsButton = document.querySelector(".statsButton");
     const gameOverModal = document.querySelector(".gameOverModal");
     const gameOverClose = document.getElementById("gameOverClose");
+    const restartGameBtn = document.querySelector(".restartGame");
 
     const displayGameOverModal = function(){
         viewStatistics();
@@ -113,6 +123,12 @@ const screenController = (function(){
     
     statsButton.onclick = function(){
         displayGameOverModal();
+    };
+
+    restartGameBtn.onclick = function(){
+        gameOverModal.style.display = "none";
+        gameController.startNewGame();
+
     };
 
 
@@ -173,6 +189,9 @@ const screenController = (function(){
         gameInfoText.forEach(element => element.textContent =name +" wins!" );
     };
 
+    const displayDraw = function(){
+        gameInfoText.forEach(element => element.textContent = "It's a draw!");
+    };
 
     const update = function(name){
         display();
@@ -181,7 +200,7 @@ const screenController = (function(){
     };
 
     const updateField = function(xCord,yCord){
-        screenFieldArray[xCord][yCord].textContent = board.fieldArray[xCord][yCord].status;
+        screenFieldArray[xCord][yCord].textContent = board.fieldArray[xCord][yCord].state;
         screenBoard.innerHTML = '';
         for(i=0;i<3;i++){
             for(k=0; k<3; k++){
@@ -192,7 +211,7 @@ const screenController = (function(){
 
     
 
-    return {update, displayPlayerTurn, displayWinner, updateField, displayGameOverModal, displaySettingsModal};
+    return {update, displayPlayerTurn, displayWinner,displayDraw, updateField, displayGameOverModal, displaySettingsModal};
 })();
 
 const gameController = (function(){
@@ -217,7 +236,7 @@ const gameController = (function(){
         for(i=0; i<8;i++){
             var fields = [];
             for(k=0; k<3;k++){
-                fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].status;
+                fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].state;
             }
             if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == marker){
                 return [true,marker];
@@ -238,8 +257,12 @@ const gameController = (function(){
             this.gameOver = true;
             screenController.displayGameOverModal();
         } 
-        else
-        {
+        else if(board.allFieldsFilled() == true){
+            this.gameOver = true;
+            screenController.displayDraw();
+            screenController.displayGameOverModal();
+        }
+        else {
             activePlayer = activePlayer == 0 ? 1 : 0;
             this.activePlayer = activePlayer;
             screenController.displayPlayerTurn(players[activePlayer].name);
@@ -264,7 +287,7 @@ const gameController = (function(){
         const evaluate = function(){
             const freeFields = function(fieldArray){
                 const freeFields = [];
-                fieldArray.forEach((row) => row.forEach((element)=> element.status == 'null' ? freeFields.push(element.cord) : null));
+                fieldArray.forEach((row) => row.forEach((element)=> element.state == 'empty' ? freeFields.push(element.cord) : null));
                 return freeFields;
             };
             var possibleActions = freeFields(board.fieldArray);
@@ -284,7 +307,7 @@ const gameController = (function(){
         
     })();
 
-    return {postRound, checkWin, players, setupGame, activePlayer, bot, gameOver};
+    return {postRound, checkWin, players, setupGame, activePlayer, bot, gameOver, startNewGame};
 })();
 
 const deepCopyFunction = (inObject) => {
