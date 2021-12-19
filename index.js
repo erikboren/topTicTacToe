@@ -20,7 +20,41 @@ const playerFactory = (marker,isBot,playerID,name) =>{
         board.placeMarker(xCord,yCord,this);
     };
 
-    return{marker, isWinner, play, playerID, name, wins};
+    const botPlay = function(){
+        
+        const evaluateMove = function(move,markerToPlace,board){
+            // perspective is true if the bot is evauating a move of its own, false if it is evaluation opponent move.
+            
+            const perspective = markerToPlace == marker? true:false; 
+            
+
+            boardInstance = deepCopyFunction(board);
+            
+
+            boardInstance.fieldArray[move.cord[0]][move.cord[1]].state= markerToPlace;
+
+            const points = boardInstance.checkWin(markerToPlace)[0]? 10: 0;
+
+            return [perspective? points:-points, move.cord, boardInstance];
+
+        };
+
+        const depth = 2;
+
+        const possibleMoves = board.possibleMoves();
+
+        var evaluatedMoves = [];
+
+        possibleMoves.forEach(move =>{
+            evaluatedMoves.push(evaluateMove(move,marker,board));
+        });
+
+        console.log('evaluated moves');
+        console.table(evaluatedMoves);
+
+    };
+
+    return{marker, isWinner, play, botPlay, playerID, name, wins};
 };
 
 const fieldFactory = (xCord,yCord) =>{
@@ -97,11 +131,52 @@ const board = (function(){
     const printArray = ()=> console.table(fieldArray);
 
     const allFieldsFilled = function(){
-        const freeFields = fieldArray.some(fieldVector => fieldVector.some(field => field.state == 'empty') == true );
-        return !freeFields;
+        return possibleMoves().length >0? false: true;
     };
 
-    return {printArray, fieldArray, placeMarker, resetBoard, allFieldsFilled};
+
+    const possibleMoves = function(){
+       const freeFields = [];
+       
+       fieldArray.forEach(fieldVector =>{
+        fieldVector.forEach(field =>{
+            field.state =='empty'? freeFields.push(field): false;
+        });
+       });
+
+       return freeFields;
+    }; 
+
+    const checkWin = function(marker){
+        const possibleWins = [
+            [[0,0],[1,1],[2,2]],
+            [[2,0],[1,1],[0,2]],
+            [[0,0],[1,0],[2,0]],
+            [[0,1],[1,1],[2,1]],
+            [[0,2],[1,2],[2,2]],
+            [[0,0],[0,1],[0,2]],
+            [[1,0],[1,1],[1,2]],
+            [[2,0],[2,1],[2,2]]
+        ];
+
+        for(i=0; i<8;i++){
+            var fields = [];
+            for(k=0; k<3;k++){
+                fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].state;
+            }
+            if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == marker){
+                return [true,marker];
+                
+            } else{
+                } 
+        }
+        return [false,null];
+        
+
+    };
+    
+
+    return {printArray, fieldArray, placeMarker, resetBoard, allFieldsFilled, possibleMoves, checkWin};
 
 })();
 
@@ -155,7 +230,7 @@ const screenController = (function(){
         settingsModal.style.display = "none";
         var names = [] ;
         nameField.forEach((element,index) => names[index]=element.value);
-        gameController.setupGame('',names);
+        gameController.setupGame(names,true);
     };
 
     const winsCells = document.querySelectorAll(".wins");
@@ -216,12 +291,12 @@ const screenController = (function(){
 
 const gameController = (function(){
     this.players = [];
-    const createPlayers = function(names){  
+    const createPlayers = function(names,bot){  
         players[0] = playerFactory('x',false,0,names[0]);
-        players[1] = playerFactory('o',false,1,names[1]);
+        players[1] = playerFactory('o',bot,1,names[1]);
     };
 
-    const checkWin = function(marker,fieldArray){
+    /* const checkWin = function(marker,fieldArray){
         const possibleWins = [
             [[0,0],[1,1],[2,2]],
             [[2,0],[1,1],[0,2]],
@@ -247,11 +322,11 @@ const gameController = (function(){
         return [false,null];
         
 
-    };
+    }; */
     var activePlayer = 0; 
     this.gameOver = false;
     const postRound = function(){
-        if(checkWin(players[activePlayer].marker,board.fieldArray)[0] == true){
+        if(board.checkWin(players[activePlayer].marker)[0] == true){
             screenController.displayWinner(players[activePlayer].name);
             players[activePlayer].wins ++;
             this.gameOver = true;
@@ -275,39 +350,14 @@ const gameController = (function(){
 
     };
 
-    const setupGame = function(mode,names){
-        createPlayers(names);
+    const setupGame = function(names,bot){
+        createPlayers(names,bot);
         startNewGame();
         activePlayer =0;
         screenController.update(players[activePlayer].name);
     };
 
-   
-    const bot = (function(marker){
-        const evaluate = function(){
-            const freeFields = function(fieldArray){
-                const freeFields = [];
-                fieldArray.forEach((row) => row.forEach((element)=> element.state == 'empty' ? freeFields.push(element.cord) : null));
-                return freeFields;
-            };
-            var possibleActions = freeFields(board.fieldArray);
-
-            possibleActions.forEach((freeField) =>{
-                const boardInstance = deepCopyFunction(fieldArray);
-                boardInstance[freeField[0]][freeField[1]].playField(marker);
-                if(checkWin(marker,boardInstance)[0] == true){
-                    freeField[2] = 10;
-                }
-                else freeField[2] = 0;
-
-            });
-            console.table(possibleActions);
-        };
-        return {evaluate};
-        
-    })();
-
-    return {postRound, checkWin, players, setupGame, activePlayer, bot, gameOver, startNewGame};
+    return {postRound, players, setupGame, activePlayer, gameOver, startNewGame};
 })();
 
 const deepCopyFunction = (inObject) => {
@@ -329,6 +379,7 @@ const deepCopyFunction = (inObject) => {
   
     return outObject;
   };
+  
   
   
 screenController.update();
