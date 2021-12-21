@@ -97,10 +97,9 @@ h2{
 
 .modal-content{
     background-color: #EEEDE7;
-    margin: 7% auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 40%;
+    width: 20%;
     border-radius: 10px;
 }
 

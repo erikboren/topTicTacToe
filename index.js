@@ -17,7 +17,7 @@ const playerFactory = (marker,isBot,playerID,name) =>{
     this.wins = 0;
 
     const play = function(xCord,yCord){
-        board.placeMarker(xCord,yCord,this);
+        board.placeMarker(xCord,yCord,players[playerID]);
     };
 
     const botPlay = function(){
@@ -27,30 +27,62 @@ const playerFactory = (marker,isBot,playerID,name) =>{
             
             const perspective = markerToPlace == marker? true:false; 
             
+            // console.log(move.cord[0] +','+ move.cord[1]);
 
-            boardInstance = deepCopyFunction(board);
+            const fieldArrayInstance = deepCopyFunction(board.fieldArray);
             
+            const boardInstance = boardFactory();
+            
+            boardInstance.fieldArray = fieldArrayInstance;
 
-            boardInstance.fieldArray[move.cord[0]][move.cord[1]].state= markerToPlace;
+
+            boardInstance.fieldArray[move.cord[0]][move.cord[1]].state=(markerToPlace);
+
+            // console.log(boardInstance.markerArray);
+        
+            // console.log(boardInstance.fieldArray);
 
             const points = boardInstance.checkWin(markerToPlace)[0]? 10: 0;
-
-            return [perspective? points:-points, move.cord, boardInstance];
+            
+           
+            
+            // console.log(move.cord);
+            // console.log(boardInstance.checkWin(markerToPlace));
+            // console.table(boardInstance.markerArray());
+           return [perspective? points:-points, move.cord[0], move.cord[1]];
 
         };
 
-        const depth = 2;
+        const depth = 1; //number of turns ahead -1
 
-        const possibleMoves = board.possibleMoves();
+        const possibleMoves = [];
+
+        possibleMoves[0] =  board.possibleMoves();
 
         var evaluatedMoves = [];
+        evaluatedMoves[0] = [];
 
-        possibleMoves.forEach(move =>{
-            evaluatedMoves.push(evaluateMove(move,marker,board));
+        possibleMoves[0].forEach(move =>{
+            evaluatedMoves[0].push(evaluateMove(move,marker,board));
         });
 
-        console.log('evaluated moves');
-        console.table(evaluatedMoves);
+
+
+        // console.log('evaluated moves');
+        // console.log(evaluatedMoves);
+
+        if(evaluatedMoves[0].some(move =>move[0]==10)){
+            const winningMove = evaluatedMoves[0].find(move => move[0]==10);
+            console.log('du vinner med ' + winningMove[1] +',' + winningMove[2]);
+            play(winningMove[1],winningMove[2]);
+        } else{
+            const randomNbr = Math.floor(Math.random()* (evaluatedMoves[0].length-1));
+            console.log(randomNbr);
+            const randomMove = evaluatedMoves[0][randomNbr];
+            play(randomMove[1],randomMove[2]);
+        }
+
+  
 
     };
 
@@ -92,15 +124,13 @@ const screenFieldFactory = (xCord,yCord) =>{
     }
     
     element.onclick = function(){
-        if(gameController.gameOver == false){
-            players[gameController.activePlayer].play(xCord,yCord);
-        }
+        players[gameController.activePlayer].play(xCord,yCord);
     };
 
     return  {element};
 };
 
-const board = (function(){
+const boardFactory = function(){
     let fieldArray =  Array.from(Array(3), () => new Array(3));
     
     
@@ -111,14 +141,25 @@ const board = (function(){
         }
     }
 
-    const placeMarker = function(xCord,yCord,player){
-        if(fieldArray[xCord][yCord].state == 'empty'){
-            fieldArray[xCord][yCord].playField(player.marker);
-            gameController.postRound(player);
+    const placeMarker = function(xCord,yCord,playingPlayer){
+        if(fieldArray[xCord][yCord].state == 'empty' && gameController.gameOver == false){
+            fieldArray[xCord][yCord].playField(playingPlayer.marker);
+            screenController.updateField(xCord,yCord);
+            gameController.postRound(playingPlayer);
             screenController.updateField(xCord,yCord);
         } else{
         }
         return;
+    };
+
+    const markerArray = function(){
+        let mArray =  Array.from(Array(3), () => new Array(3));
+        for(i=0;i<3;i++){
+            for(k=0; k<3; k++){
+                mArray[i][k]= fieldArray[i][k].state;
+            }
+        }
+        return mArray;
     };
 
 
@@ -162,7 +203,7 @@ const board = (function(){
         for(i=0; i<8;i++){
             var fields = [];
             for(k=0; k<3;k++){
-                fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].state;
+                fields[k] = this.fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].state;
             }
             if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == marker){
                 return [true,marker];
@@ -176,9 +217,9 @@ const board = (function(){
     };
     
 
-    return {printArray, fieldArray, placeMarker, resetBoard, allFieldsFilled, possibleMoves, checkWin};
+    return {printArray, fieldArray, markerArray, placeMarker, resetBoard, allFieldsFilled, possibleMoves, checkWin};
 
-})();
+};
 
 const screenController = (function(){
     //gameOver Modal
@@ -380,7 +421,45 @@ const deepCopyFunction = (inObject) => {
     return outObject;
   };
   
-  
+const board = boardFactory();  
+
+const checkWin = function(marker,fieldArray){
+    const possibleWins = [
+        [[0,0],[1,1],[2,2]],
+        [[2,0],[1,1],[0,2]],
+        [[0,0],[1,0],[2,0]],
+        [[0,1],[1,1],[2,1]],
+        [[0,2],[1,2],[2,2]],
+        [[0,0],[0,1],[0,2]],
+        [[1,0],[1,1],[1,2]],
+        [[2,0],[2,1],[2,2]]
+    ];
+
+    for(i=0; i<8;i++){
+        var fields = [];
+        for(k=0; k<3;k++){
+            fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].state;
+        }
+        if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == marker){
+            return [true,marker];
+            
+        } else{
+            } 
+    }
+    return [false,null];
+};
+
+const markerArray = function(fieldArray){
+    let markerArray =  Array.from(Array(3), () => new Array(3));
+    for(i=0;i<3;i++){
+        for(k=0; k<3; k++){
+            markerArray[i][k]= fieldArray[i][k].state;
+        }
+    }
+    return markerArray;
+};
+
+
   
 screenController.update();
 
