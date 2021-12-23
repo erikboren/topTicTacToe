@@ -86,7 +86,7 @@ const playerFactory = (marker,isBot,playerID,name) =>{
 
     };
 
-    return{marker, isWinner, play, botPlay, playerID, name, wins};
+    return{marker, isWinner, play, botPlay, playerID, name, wins, isBot};
 };
 
 const fieldFactory = (xCord,yCord) =>{
@@ -254,6 +254,7 @@ const screenController = (function(){
     const settingsClose = document.getElementById("settingsClose");
     const startGameBtn = document.querySelector(".startGameBtn");
     const nameField = document.querySelectorAll(".nameField");
+    const isBotBox = document.querySelector(".isBotBox");
     
     settingsClose.onclick = function() {
         settingsModal.style.display = "none";
@@ -271,7 +272,7 @@ const screenController = (function(){
         settingsModal.style.display = "none";
         var names = [] ;
         nameField.forEach((element,index) => names[index]=element.value);
-        gameController.setupGame(names,true);
+        gameController.setupGame(names,isBotBox.checked);
     };
 
     const winsCells = document.querySelectorAll(".wins");
@@ -381,20 +382,23 @@ const gameController = (function(){
         else {
             activePlayer = activePlayer == 0 ? 1 : 0;
             this.activePlayer = activePlayer;
-            screenController.displayPlayerTurn(players[activePlayer].name);
+            screenController.displayPlayerTurn(players[this.activePlayer].name);
+            players[activePlayer].isBot ? players[activePlayer].botPlay(): false;
         }
+        
     };
     const startNewGame = function(){
         this.gameOver = false;
+        this.activePlayer = 0;
         board.resetBoard();
-        screenController.update(players[activePlayer].name);
+        screenController.update(players[this.activePlayer].name);
 
     };
 
     const setupGame = function(names,bot){
         createPlayers(names,bot);
         startNewGame();
-        activePlayer =0;
+        this.activePlayer = 0;
         screenController.update(players[activePlayer].name);
     };
 
