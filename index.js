@@ -399,7 +399,7 @@ const gameController = (function(){
     const setupGame = function(names,bot){
         createPlayers(names,bot);
         startNewGame();
-        activePlayer = 0
+        activePlayer = 0;
         this.activePlayer = activePlayer;
         screenController.update(players[activePlayer].name);
     };
@@ -429,44 +429,6 @@ const deepCopyFunction = (inObject) => {
   
 const board = boardFactory();  
 
-const checkWin = function(marker,fieldArray){
-    const possibleWins = [
-        [[0,0],[1,1],[2,2]],
-        [[2,0],[1,1],[0,2]],
-        [[0,0],[1,0],[2,0]],
-        [[0,1],[1,1],[2,1]],
-        [[0,2],[1,2],[2,2]],
-        [[0,0],[0,1],[0,2]],
-        [[1,0],[1,1],[1,2]],
-        [[2,0],[2,1],[2,2]]
-    ];
-
-    for(i=0; i<8;i++){
-        var fields = [];
-        for(k=0; k<3;k++){
-            fields[k] = fieldArray[possibleWins[i][k][0]][possibleWins[i][k][1]].state;
-        }
-        if(fields[2] == fields[1] && fields[2] == fields[0] && fields[2] == marker){
-            return [true,marker];
-            
-        } else{
-            } 
-    }
-    return [false,null];
-};
-
-const markerArray = function(fieldArray){
-    let markerArray =  Array.from(Array(3), () => new Array(3));
-    for(i=0;i<3;i++){
-        for(k=0; k<3; k++){
-            markerArray[i][k]= fieldArray[i][k].state;
-        }
-    }
-    return markerArray;
-};
-
-
-  
 screenController.update();
 
 
