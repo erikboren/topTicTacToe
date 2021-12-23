@@ -389,7 +389,8 @@ const gameController = (function(){
     };
     const startNewGame = function(){
         this.gameOver = false;
-        this.activePlayer = 0;
+        activePlayer = 0;
+        this.activePlayer = activePlayer;
         board.resetBoard();
         screenController.update(players[this.activePlayer].name);
 
@@ -398,7 +399,8 @@ const gameController = (function(){
     const setupGame = function(names,bot){
         createPlayers(names,bot);
         startNewGame();
-        this.activePlayer = 0;
+        activePlayer = 0
+        this.activePlayer = activePlayer;
         screenController.update(players[activePlayer].name);
     };
 
