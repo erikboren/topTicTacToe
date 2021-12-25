@@ -22,12 +22,7 @@ const playerFactory = (marker,isBot,playerID,name) =>{
 
     const botPlay = function(){
         
-        const evaluateMove = function(move,markerToPlace,board){
-            // perspective is true if the bot is evauating a move of its own, false if it is evaluation opponent move.
-            
-            const perspective = markerToPlace == marker? true:false; 
-            
-            // console.log(move.cord[0] +','+ move.cord[1]);
+        const evaluateMove = function(move,marker,opponentMarker,board){
 
             const fieldArrayInstance = deepCopyFunction(board.fieldArray);
             
@@ -35,55 +30,40 @@ const playerFactory = (marker,isBot,playerID,name) =>{
             
             boardInstance.fieldArray = fieldArrayInstance;
 
+            boardInstance.fieldArray[move.cord[0]][move.cord[1]].state=(marker);
 
-            boardInstance.fieldArray[move.cord[0]][move.cord[1]].state=(markerToPlace);
-
-            // console.log(boardInstance.markerArray);
-        
-            // console.log(boardInstance.fieldArray);
-
-            const points = boardInstance.checkWin(markerToPlace)[0]? 10: 0;
+            const points = [];
+            points.push(boardInstance.checkWin(marker)[0]? 10: 0);
             
+            boardInstance.fieldArray[move.cord[0]][move.cord[1]].state=(opponentMarker);
+
+            points.push(boardInstance.checkWin(opponentMarker)[0]? -10: 0);
            
-            
-            // console.log(move.cord);
-            // console.log(boardInstance.checkWin(markerToPlace));
-            // console.table(boardInstance.markerArray());
-           return [perspective? points:-points, move.cord[0], move.cord[1]];
+           return [points[0], points[1], move.cord[0], move.cord[1]];
 
         };
 
-        const depth = 1; //number of turns ahead -1
+        opponentMarker = marker == 'x'? 'o' : 'x';
+        const possibleMoves =  board.possibleMoves();
 
-        const possibleMoves = [];
-
-        possibleMoves[0] =  board.possibleMoves();
-
-        var evaluatedMoves = [];
-        evaluatedMoves[0] = [];
-
-        possibleMoves[0].forEach(move =>{
-            evaluatedMoves[0].push(evaluateMove(move,marker,board));
+        const evaluatedMoves = [];
+        
+        possibleMoves.forEach(move =>{
+            evaluatedMoves.push(evaluateMove(move,marker,opponentMarker,board));
         });
 
-
-
-        // console.log('evaluated moves');
-        // console.log(evaluatedMoves);
-
-        if(evaluatedMoves[0].some(move =>move[0]==10)){
-            const winningMove = evaluatedMoves[0].find(move => move[0]==10);
-            console.log('du vinner med ' + winningMove[1] +',' + winningMove[2]);
-            play(winningMove[1],winningMove[2]);
-        } else{
-            const randomNbr = Math.floor(Math.random()* (evaluatedMoves[0].length-1));
-            console.log(randomNbr);
-            const randomMove = evaluatedMoves[0][randomNbr];
-            play(randomMove[1],randomMove[2]);
-        }
-
-  
-
+        if(evaluatedMoves.some(move =>move[0]==10)){
+            const winningMove = evaluatedMoves.find(move => move[0]==10);
+            play(winningMove[2],winningMove[3]);
+        }else if(evaluatedMoves.some(move =>move[1]==-10)){
+            const defenceMode = evaluatedMoves.find(move => move[1]==-10); 
+            play(defenceMode[2],defenceMode[3]);
+        } else if(evaluatedMoves.some(move => move[2]==1 && move[3]==1)){
+            play(1,1);
+        } 
+        else {const randomNbr = Math.floor(Math.random()* (evaluatedMoves.length-1));
+        const randomMove = evaluatedMoves[randomNbr];
+        play(randomMove[2],randomMove[3]);}
     };
 
     return{marker, isWinner, play, botPlay, playerID, name, wins, isBot};
@@ -104,10 +84,7 @@ const fieldFactory = (xCord,yCord) =>{
         this.state = state;
     };
 
-
-
     return {state, cord, playField, resetField};
-
 };
 
 const screenFieldFactory = (xCord,yCord) =>{
